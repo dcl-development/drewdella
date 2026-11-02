@@ -292,6 +292,20 @@
   background: rgba(255, 255, 255, 0.8);
 }
 
+.gmaps-canvas .maplibregl-ctrl-bottom-right {
+  bottom: 0;
+  right: 0;
+}
+
+.gmaps-canvas .maplibregl-ctrl-bottom-right .maplibregl-ctrl {
+  float: right;
+  margin: 0 8px 8px 0;
+}
+
+.gmaps-canvas .maplibregl-ctrl-attrib.maplibregl-compact {
+  margin: 0;
+}
+
 .gpin {
   width: 27px;
   height: 41px;
@@ -432,11 +446,6 @@
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     font-size: 13px;
     color: #3c4043;
-  }
-
-  .gmaps-canvas .maplibregl-ctrl-bottom-left,
-  .gmaps-canvas .maplibregl-ctrl-bottom-right {
-    bottom: 76px;
   }
 }
 

@@ -125,7 +125,7 @@ export default function Map({ locations = [], loadError = "" }) {
         style: OPENFREEMAP_STYLE,
         center: places[0].lngLat,
         zoom: 11,
-        attributionControl: true,
+        attributionControl: false,
         pitch: 0,
         bearing: 0,
         transformStyle: (_previous, next) => {
@@ -133,6 +133,7 @@ export default function Map({ locations = [], loadError = "" }) {
           return next;
         },
       });
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
       mapRef.current = map;
 
       map.on("error", (event) => {
@@ -144,6 +145,11 @@ export default function Map({ locations = [], loadError = "" }) {
         if (cancelled) return;
         applyGoogleBasemap(map);
         map.resize();
+        const attrib = map.getContainer().querySelector(".maplibregl-ctrl-attrib");
+        if (attrib?.classList.contains("maplibregl-compact")) {
+          attrib.classList.remove("maplibregl-compact-show");
+          attrib.removeAttribute("open");
+        }
         markersRef.current = places.map((place) => {
           const el = document.createElement("button");
           el.type = "button";

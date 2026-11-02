@@ -5,8 +5,10 @@
 }
 
 .site-layout--maps {
-  height: 100vh;
-  height: 100dvh;
+  /* With html { zoom: var(--ui-zoom) }, a literal 100dvh layout grows past the
+     viewport and clips the map’s bottom-right attribution on desktop. */
+  height: calc(100dvh / var(--ui-zoom, 1));
+  min-height: calc(100dvh / var(--ui-zoom, 1));
   overflow: hidden;
 }
 
