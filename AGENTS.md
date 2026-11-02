@@ -10,7 +10,7 @@ Read this before exploring. Prefer small diffs. Do not rewrite UI without explai
 
 ## Stack
 
-Next.js 15 App Router · React 18 · MUI · Sanity · Mapbox · Vercel  
+Next.js 15 App Router · React 18 · MUI · Sanity · MapLibre · Vercel  
 Node from `.nvmrc`. JS (not TS). Tailwind is **not** used.
 
 ## Commands

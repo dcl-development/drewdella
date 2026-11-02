@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { applyGoogleBasemap } from "./googleBasemap";
+import {
+  applyGoogleBasemap,
+  OPENFREEMAP_STYLE,
+  ROBOTO_GLYPHS,
+} from "./googleBasemap";
 import "./Map.css";
 
 function prefersReducedMotion() {
@@ -34,36 +38,22 @@ const pinSVG = `<svg width="27" height="41" viewBox="0 0 27 41" xmlns="http://ww
   <circle cx="13.5" cy="12.15" r="4.35" fill="#fff"/>
 </svg>`;
 
-async function geocode(query, token) {
-  if (!query || !token) return null;
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?limit=1&access_token=${token}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.features?.[0]?.center || null;
-  } catch {
-    return null;
-  }
-}
-
-async function resolvePlaces(raw, token) {
+function resolvePlaces(raw) {
   const places = [];
   for (const location of raw || []) {
-    let lngLat = null;
-    if (location.coordinates?.lng != null && location.coordinates?.lat != null) {
-      lngLat = [location.coordinates.lng, location.coordinates.lat];
-    } else if (location.address) {
-      lngLat = await geocode(location.address, token);
-    } else if (location.venueName) {
-      lngLat = await geocode(location.venueName, token);
+    const lat = location.coordinates?.lat;
+    const lng = location.coordinates?.lng;
+    if (lat == null || lng == null) {
+      console.warn(
+        `[Map] Skipping "${location.venueName || location._id}" — no coordinates in Sanity`
+      );
+      continue;
     }
-    if (!lngLat) continue;
     places.push({
       id: location._id,
       venueName: location.venueName || "Venue",
       address: location.address || "",
-      lngLat,
+      lngLat: [lng, lat],
     });
   }
   return places;
@@ -81,17 +71,14 @@ function placeCard(place) {
 }
 
 export default function Map({ locations = [], loadError = "" }) {
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
   const mapNode = useRef(null);
   const mapRef = useRef(null);
-  const mapboxRef = useRef(null);
+  const maplibreRef = useRef(null);
   const markersRef = useRef([]);
   const popupRef = useRef(null);
   const searchWrapRef = useRef(null);
   const inputRef = useRef(null);
 
-  const [places, setPlaces] = useState([]);
-  const [loading, setLoading] = useState(!loadError);
   const [error, setError] = useState(loadError);
   const [mapReady, setMapReady] = useState(false);
   const [mapFailed, setMapFailed] = useState("");
@@ -102,66 +89,55 @@ export default function Map({ locations = [], loadError = "" }) {
   const [highlight, setHighlight] = useState(-1);
   const narrow = useNarrow();
 
+  const places = useMemo(() => {
+    if (loadError) return [];
+    return resolvePlaces(locations);
+  }, [locations, loadError]);
+
+  const loading = !loadError && locations.length > 0 && !places.length;
+
   useEffect(() => {
     setWebgl(hasWebGL());
   }, []);
 
   useEffect(() => {
-    if (loadError) {
-      setPlaces([]);
-      setError(loadError);
-      setLoading(false);
-      return undefined;
-    }
+    setError(loadError);
+  }, [loadError]);
 
-    let cancelled = false;
-    (async () => {
-      try {
-        const next = await resolvePlaces(locations, token);
-        if (!cancelled) setPlaces(next);
-      } catch (err) {
-        console.error("Error resolving locations:", err);
-        if (!cancelled) setError("Couldn’t load venues right now. Try again in a bit.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [locations, token, loadError]);
-
-  const canDraw = Boolean(token) && webgl && !mapFailed;
+  const canDraw = webgl && !mapFailed;
 
   useEffect(() => {
-    if (!canDraw || !places.length || !mapNode.current || mapRef.current) return undefined;
+    if (!canDraw || !places.length || !mapNode.current || mapRef.current) {
+      return undefined;
+    }
 
     let map;
     let cancelled = false;
 
     (async () => {
-      const mapboxgl = (await import("mapbox-gl")).default;
-      await import("mapbox-gl/dist/mapbox-gl.css");
+      const maplibregl = (await import("maplibre-gl")).default;
+      await import("maplibre-gl/dist/maplibre-gl.css");
       if (cancelled || !mapNode.current) return;
 
-      mapboxgl.accessToken = token;
-      mapboxRef.current = mapboxgl;
-      map = new mapboxgl.Map({
+      maplibreRef.current = maplibregl;
+      map = new maplibregl.Map({
         container: mapNode.current,
-        style: "mapbox://styles/mapbox/streets-v12",
+        style: OPENFREEMAP_STYLE,
         center: places[0].lngLat,
         zoom: 11,
         attributionControl: true,
         pitch: 0,
         bearing: 0,
+        transformStyle: (_previous, next) => {
+          next.glyphs = ROBOTO_GLYPHS;
+          return next;
+        },
       });
       mapRef.current = map;
 
       map.on("error", (event) => {
-        const status = event?.error?.status;
-        if (status === 401 || status === 403) {
-          setMapFailed("The map token was rejected.");
-        }
+        console.error("Map error:", event?.error || event);
+        if (!mapFailed) setMapFailed("The map couldn’t load tiles.");
       });
 
       map.on("load", () => {
@@ -180,12 +156,15 @@ export default function Map({ locations = [], loadError = "" }) {
           });
           return {
             id: place.id,
-            marker: new mapboxgl.Marker({ element: el, anchor: "bottom" })
+            marker: new maplibregl.Marker({ element: el, anchor: "bottom" })
               .setLngLat(place.lngLat)
               .addTo(map),
           };
         });
-        const bounds = new mapboxgl.LngLatBounds(places[0].lngLat, places[0].lngLat);
+        const bounds = new maplibregl.LngLatBounds(
+          places[0].lngLat,
+          places[0].lngLat
+        );
         places.forEach((place) => bounds.extend(place.lngLat));
         map.fitBounds(bounds, { padding: 64, maxZoom: 14, duration: 0 });
         setMapReady(true);
@@ -203,10 +182,10 @@ export default function Map({ locations = [], loadError = "" }) {
       popupRef.current = null;
       map?.remove();
       mapRef.current = null;
-      mapboxRef.current = null;
+      maplibreRef.current = null;
       setMapReady(false);
     };
-  }, [canDraw, places, token]);
+  }, [canDraw, places]);
 
   useEffect(() => {
     markersRef.current.forEach((item) => {
@@ -217,9 +196,9 @@ export default function Map({ locations = [], loadError = "" }) {
     });
 
     const map = mapRef.current;
-    const mapboxgl = mapboxRef.current;
+    const maplibregl = maplibreRef.current;
     const existing = popupRef.current;
-    if (!activeId || !map || !mapboxgl || !mapReady) {
+    if (!activeId || !map || !maplibregl || !mapReady) {
       if (existing) {
         popupRef.current = null;
         existing.remove();
@@ -235,7 +214,7 @@ export default function Map({ locations = [], loadError = "" }) {
       existing.remove();
     }
 
-    const popup = new mapboxgl.Popup({
+    const popup = new maplibregl.Popup({
       closeButton: true,
       closeOnClick: false,
       maxWidth: "280px",
@@ -362,10 +341,12 @@ export default function Map({ locations = [], loadError = "" }) {
     });
   };
 
-  const fallback = !token
-    ? "Mapbox isn’t set up yet. The venues are listed here."
-    : !webgl
-      ? "This browser can’t draw the map. The venues are listed here."
+  const fallback = !webgl
+    ? "This browser can’t draw the map. The venues are listed here."
+    : mapFailed || (!places.length && !loading)
+      ? places.length
+        ? mapFailed
+        : "No venues pinned yet. The list will fill in when coordinates are set in Studio."
       : mapFailed;
 
   const suggestStatus = loading
@@ -508,7 +489,7 @@ export default function Map({ locations = [], loadError = "" }) {
       </aside>
 
       <div className="gmaps-stage">
-        {canDraw ? (
+        {canDraw && places.length ? (
           <>
             <div ref={mapNode} className="gmaps-canvas" />
             {!mapReady ? <div className="gmaps-veil">Loading map…</div> : null}
