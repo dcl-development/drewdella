@@ -4,12 +4,21 @@
   flex-direction: column;
 }
 
-.site-layout--maps {
-  /* With html { zoom: var(--ui-zoom) }, a literal 100dvh layout grows past the
-     viewport and clips the map’s bottom-right attribution on desktop. */
-  height: calc(100dvh / var(--ui-zoom, 1));
-  min-height: calc(100dvh / var(--ui-zoom, 1));
+.site-layout.site-layout--maps {
   overflow: hidden;
+  /* Phones reset html zoom to 1; dividing by --ui-zoom (still 1.2) caused ~17% gap. */
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+}
+
+@media (min-width: 769px) {
+  .site-layout.site-layout--maps {
+    /* Desktop html zoom scales layout; shrink shell so its painted bottom matches the viewport. */
+    height: calc(100vh / var(--ui-zoom, 1.2));
+    min-height: calc(100vh / var(--ui-zoom, 1.2));
+    max-height: calc(100vh / var(--ui-zoom, 1.2));
+  }
 }
 
 .site-main {
