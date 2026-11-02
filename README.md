@@ -26,11 +26,11 @@ CMS photos are served from Sanity's CDN (`cdn.sanity.io`), not Vercel Image Opti
 
 ## Stack
 
-Next.js 16 (App Router), React 19, styled-components, Sanity, Mapbox GL, Turf, deployed on Vercel.
+Next.js 16 (App Router), React 19, plain CSS, Sanity, Mapbox GL, Turf, deployed on Vercel.
 
 ## Running it locally
 
-You need Node.js 20 or newer (`.nvmrc` pins 24).
+You need Node.js 24 (`.nvmrc` and `package.json` both pin it).
 
 ```sh
 npm install

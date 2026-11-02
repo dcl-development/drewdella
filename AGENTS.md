@@ -10,8 +10,8 @@ Read this before exploring. Prefer small diffs. Do not rewrite UI without explai
 
 ## Stack
 
-Next.js 15 App Router · React 18 · MUI · Sanity · Mapbox · Vercel  
-Node from `.nvmrc`. JS (not TS). Tailwind is **not** used.
+Next.js 16 App Router, React 19, plain CSS, Sanity, Mapbox, Vercel.  
+Node 24 (from `.nvmrc`). JS (not TS). Tailwind is **not** used.
 
 ## Commands
 
@@ -61,7 +61,7 @@ Sanity dataset is public-read — pages render without tokens. Content comes onl
 ## Agent efficiency
 
 1. Grep/read the hotspot above before scanning the whole tree.
-2. Match existing patterns (MUI + CSS files beside components). Don’t introduce Tailwind/shadcn.
+2. Match existing patterns (plain CSS files beside components). Don’t introduce Tailwind/shadcn.
 3. Keep commits small and descriptive. Prefer feature branches; merge to `main` when the user asks to ship.
 4. Skip lengthy browser QA unless asked — the owner often verifies UI themselves.
 5. Don’t invent CMS fields; check `studio/schemaTypes/` first.
