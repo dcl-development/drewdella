@@ -79,6 +79,13 @@ export function formatListingDate(value) {
   });
 }
 
+// "Lyrics from <album>." without doubling the album's own end punctuation
+// (CMS titles like "Thx4itall. " or "SUCH IS LIFE!").
+export function albumSentence(album) {
+  const name = String(album).trim();
+  return /[.!?]$/.test(name) ? `Lyrics from ${name}` : `Lyrics from ${name}.`;
+}
+
 export function datedSnippet(dateValue, ...parts) {
   return [formatListingDate(dateValue), ...parts]
     .filter(Boolean)

@@ -12,6 +12,7 @@ import {
   formatCite,
   pathCite,
   datedSnippet,
+  albumSentence,
   snippetFromPortableText,
   blogPreviewSnippet,
   socialSnippet,
@@ -244,7 +245,7 @@ export default function AllPage({ feed = null }) {
     if (kind === "lyrics") {
       const slugValue = item.slug?.current || item.slug;
       const albumLine = item.album
-        ? `Lyrics from ${item.album}.`
+        ? albumSentence(item.album)
         : "Single.";
       return (
         <SearchResult
