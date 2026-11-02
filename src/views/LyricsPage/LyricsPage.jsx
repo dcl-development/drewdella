@@ -8,6 +8,7 @@ import {
   snippetFromPortableText,
   pathCite,
   datedSnippet,
+  albumSentence,
 } from "../../components/SearchResults/SearchResults.jsx";
 import SerpMessage from "../../components/SerpMessage/SerpMessage.jsx";
 import { safeHref } from "../../lib/safeHref.js";
@@ -208,7 +209,7 @@ function LyricsPage({ slug, initialSong = null, initialSongs = null }) {
         filtered.map((item) => {
           const slugValue = item.slug?.current || item.slug;
           const albumLine = item.album
-            ? `Lyrics from ${item.album}.`
+            ? albumSentence(item.album)
             : "Single.";
           const preview = snippetFromPortableText(item.preview, 140);
           return (
