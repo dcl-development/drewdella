@@ -22,7 +22,8 @@ export default defineType({
       name: 'coordinates',
       title: 'Coordinates (optional)',
       type: 'geopoint',
-      description: 'If the pin is wrong, paste the coordinates here (overrides venue name/address)',
+      description:
+        'Drop a pin on the map in Studio so this venue shows on drewdella.com/maps.',
     }),
   ],
   preview: {
