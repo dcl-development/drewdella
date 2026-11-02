@@ -26,11 +26,11 @@ CMS photos are served from Sanity's CDN (`cdn.sanity.io`), not Vercel Image Opti
 
 ## Stack
 
-Next.js 15 (App Router), React 18, MUI, Sanity, Mapbox GL, Turf, deployed on Vercel.
+Next.js 16 (App Router), React 19, styled-components, Sanity, Mapbox GL, Turf, deployed on Vercel.
 
 ## Running it locally
 
-You need Node.js 20 or newer (`.nvmrc` pins 22).
+You need Node.js 20 or newer (`.nvmrc` pins 24).
 
 ```sh
 npm install
@@ -50,7 +50,6 @@ Only variables starting with `NEXT_PUBLIC_` reach the browser. Never put a Sanit
 ## Project layout
 
 More detail on the video sync, chat protection, key restrictions and deployment is in [docs/how-it-works.md](docs/how-it-works.md).
-
 
 - `app/` routes and API handlers (`api/videos`, `api/videos-sync`, `api/chat`)
 - `src/views/` one folder per tab
