@@ -1,8 +1,12 @@
 /**
- * Recolor Mapbox Streets so the basemap reads like Google Maps.
- * Streets-v12 stays the source of roads, water, and labels. These overrides
- * only change paint and the label font (Roboto, which Mapbox hosts).
+ * Recolor OpenFreeMap Liberty so the basemap reads like Google Maps.
+ * Vector tiles stay OpenFreeMap; these overrides only change paint and
+ * label fonts (Roboto via fonts.openmaptiles.org).
  */
+
+export const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
+
+export const ROBOTO_GLYPHS = "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf";
 
 const LAND = "#f5f3ef";
 const WATER = "#aadaff";
@@ -16,43 +20,11 @@ const BUILDING = "#ebe6df";
 const LABEL = "#5f6368";
 const LABEL_HALO = "#f7f5f2";
 
-const PARK_COLOR = [
-  "match",
-  ["get", "class"],
-  "park",
-  PARK,
-  "grass",
-  PARK_SOFT,
-  "wood",
-  PARK,
-  "scrub",
-  "#d3ebc6",
-  "pitch",
-  "#b7d99a",
-  "cemetery",
-  "#d5e6d0",
-  "hospital",
-  "#f4e4e4",
-  "school",
-  "#f3efe4",
-  "airport",
-  "#e7eef6",
-  "sand",
-  "#f6e7c8",
-  "agriculture",
-  "#eef3d4",
-  "glacier",
-  "#e4eef5",
-  "residential",
-  "#f3f1ee",
-  LAND,
-];
-
 function paint(map, id, prop, value) {
   try {
     map.setPaintProperty(id, prop, value);
   } catch {
-    /* layer does not have this property */
+    /* layer missing or property unsupported */
   }
 }
 
@@ -60,17 +32,24 @@ function layout(map, id, prop, value) {
   try {
     map.setLayoutProperty(id, prop, value);
   } catch {
-    /* layer does not have this property */
+    /* layer missing or property unsupported */
   }
 }
 
 function roadRole(id) {
-  if (/rail|aerialway|oneway|arrow|label|shield|turning|crosswalk|golf/.test(id)) {
+  if (
+    /rail|transit|one_way|arrow|shield|area_pattern|runway|taxiway|aeroway|hatching/.test(
+      id
+    )
+  ) {
     return null;
   }
-  if (!/^(road|tunnel|bridge)-/.test(id)) return null;
-  if (/motorway|trunk|major-link/.test(id)) return "highway";
-  if (/path|steps|pedestrian|construction/.test(id)) return "path";
+  if (!/^(road|tunnel|bridge)_/.test(id)) return null;
+  if (/motorway|trunk|primary/.test(id)) return "highway";
+  if (/path|pedestrian|track|service|minor|link/.test(id) && !/casing/.test(id)) {
+    return "path";
+  }
+  if (/casing/.test(id)) return "casing";
   return "street";
 }
 
@@ -82,7 +61,9 @@ function applyLabelFont(map, id) {
     return;
   }
   if (!Array.isArray(stack) || !stack.length) return;
-  const emphasis = stack.some((name) => /medium|bold/i.test(String(name)));
+  const emphasis = stack.some((name) =>
+    /medium|bold|semibold/i.test(String(name))
+  );
   layout(
     map,
     id,
@@ -99,70 +80,83 @@ export function applyGoogleBasemap(map) {
   for (const layer of layers) {
     const { id, type } = layer;
 
-    if (id === "land" || id === "background") {
+    if (id === "background") {
       paint(map, id, "background-color", LAND);
     }
 
-    if (id === "landcover" || id === "landuse") {
-      paint(map, id, "fill-color", PARK_COLOR);
+    if (id === "natural_earth") {
+      paint(map, id, "raster-opacity", 0.35);
     }
 
-    if (id === "national-park") {
+    if (id === "park" || id === "park_outline") {
       paint(map, id, "fill-color", PARK);
+      paint(map, id, "line-color", PARK_SOFT);
     }
 
-    if (id === "water" || id === "water-depth") {
+    if (id === "landcover_wood" || id === "landcover_grass") {
+      paint(map, id, "fill-color", id === "landcover_wood" ? PARK : PARK_SOFT);
+      paint(map, id, "fill-opacity", 0.55);
+    }
+
+    if (id === "landcover_ice") {
+      paint(map, id, "fill-color", "#e4eef5");
+    }
+
+    if (id === "landcover_sand") {
+      paint(map, id, "fill-color", "#f6e7c8");
+    }
+
+    if (id === "landuse_residential") {
+      paint(map, id, "fill-color", "#f3f1ee");
+    }
+
+    if (
+      id === "landuse_pitch" ||
+      id === "landuse_track" ||
+      id === "landuse_cemetery"
+    ) {
+      paint(map, id, "fill-color", PARK_SOFT);
+    }
+
+    if (id === "landuse_hospital") {
+      paint(map, id, "fill-color", "#f4e4e4");
+    }
+
+    if (id === "landuse_school") {
+      paint(map, id, "fill-color", "#f3efe4");
+    }
+
+    if (id === "water") {
       paint(map, id, "fill-color", WATER);
     }
 
-    if (id === "water-shadow") {
-      paint(map, id, "fill-color", "#9ecff5");
-    }
-
-    if (id === "waterway") {
+    if (/^waterway_/.test(id)) {
       paint(map, id, "line-color", "#93cef8");
     }
 
-    if (id === "hillshade") {
-      paint(map, id, "fill-opacity", 0.25);
-    }
-
-    if (id === "building" || id === "building-underground" || id === "land-structure-polygon") {
+    if (id === "building" || id === "building-3d") {
       paint(map, id, "fill-color", BUILDING);
       paint(map, id, "fill-outline-color", "#e0dbd4");
     }
 
-    if (id === "land-structure-line") {
-      paint(map, id, "line-color", "#e0dbd4");
-    }
-
-    if (id === "road-polygon" || id === "road-pedestrian-polygon-fill") {
-      paint(map, id, "fill-color", ROAD);
-      paint(map, id, "fill-outline-color", ROAD_EDGE);
-    }
-
-    if (id === "ferry" || id === "ferry-auto") {
-      paint(map, id, "line-color", "#7eb6e0");
-    }
-
-    if (id.startsWith("admin-")) {
-      paint(map, id, "line-color", id.includes("disputed") ? "#9aa0a6" : "#c5c5c5");
+    if (id === "aeroway_fill") {
+      paint(map, id, "fill-color", "#e7eef6");
     }
 
     if (type === "line") {
       const role = roadRole(id);
       if (role) {
-        const casing = /-case$|-bg$/.test(id);
+        const isCasing = /casing/.test(id);
         const color =
           role === "highway"
-            ? casing
+            ? isCasing
               ? HIGHWAY_EDGE
               : HIGHWAY
             : role === "path"
-              ? casing
+              ? isCasing
                 ? "#d9d4cc"
                 : ROAD
-              : casing
+              : isCasing
                 ? ROAD_EDGE
                 : ROAD;
         paint(map, id, "line-color", color);
@@ -172,23 +166,20 @@ export function applyGoogleBasemap(map) {
     if (type === "symbol") {
       applyLabelFont(map, id);
 
-      if (/road-label|path-pedestrian|road-intersection|building-number|block-number|building-entrance/.test(id)) {
+      if (/highway-name|road_shield|highway-shield/.test(id)) {
         paint(map, id, "text-color", LABEL);
         paint(map, id, "text-halo-color", LABEL_HALO);
         paint(map, id, "text-halo-width", 1.15);
-      } else if (/settlement|state-label|country-label|continent/.test(id)) {
+      } else if (/label_city|label_town|label_village|label_state|label_country/.test(id)) {
         paint(map, id, "text-color", "#202124");
         paint(map, id, "text-halo-color", "#ffffff");
-      } else if (/poi-label|airport-label|transit-label/.test(id)) {
+      } else if (/poi_|airport|label_other/.test(id)) {
         paint(map, id, "text-color", "#616161");
         paint(map, id, "text-halo-color", "#ffffff");
         paint(map, id, "text-halo-width", 1);
-      } else if (/water/.test(id)) {
+      } else if (/water_name|waterway_line_label/.test(id)) {
         paint(map, id, "text-color", "#3d7ea6");
         paint(map, id, "text-halo-color", "rgba(255,255,255,0.8)");
-      } else if (/natural|golf/.test(id)) {
-        paint(map, id, "text-color", "#3d7a3d");
-        paint(map, id, "text-halo-color", "#ffffff");
       }
     }
   }

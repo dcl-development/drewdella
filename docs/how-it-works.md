@@ -35,7 +35,7 @@ The Hangouts-style widget uses `/api/chat` (`app/api/chat/route.js` and `lib/cha
 
 ## Maps
 
-Venues are `mapLocation` documents. The map (`src/components/Map/Map.jsx`) uses the stored coordinates when a venue has them and otherwise geocodes the address with Mapbox. `NEXT_PUBLIC_MAPBOX_TOKEN` is a public `pk.` token, so restrict it by URL in the Mapbox dashboard (the production domain and `http://localhost:3000`).
+Venues are `mapLocation` documents. Each venue needs a `coordinates` geopoint in Studio (drop the pin on the map). The Maps tab (`src/components/Map/Map.jsx`) reads those coordinates from Sanity and does not geocode at runtime. The basemap is [OpenFreeMap](https://openfreemap.org/) Liberty tiles via MapLibre GL, recolored in `googleBasemap.js` to match the previous Google-style palette. No API key is required for the map tiles.
 
 ## Search
 
@@ -47,7 +47,6 @@ See `.env.example`.
 
 | Variable | Side | Notes |
 |---|---|---|
-| `NEXT_PUBLIC_MAPBOX_TOKEN` | browser | public token, restrict by URL |
 | `YOUTUBE_API_KEY` | server | restrict to the YouTube Data API v3 in Google Cloud |
 | `YOUTUBE_CHANNEL_ID` | server | |
 | `SANITY_API_TOKEN` | server | editor token, mark as sensitive on Vercel |

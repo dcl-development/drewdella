@@ -10,7 +10,7 @@ Read this before exploring. Prefer small diffs. Do not rewrite UI without explai
 
 ## Stack
 
-Next.js 16 App Router, React 19, plain CSS, Sanity, Mapbox, Vercel.  
+Next.js 16 App Router, React 19, plain CSS, Sanity, MapLibre, Vercel.  
 Node 24 (from `.nvmrc`). JS (not TS). Tailwind is **not** used.
 
 ## Commands

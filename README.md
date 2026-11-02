@@ -13,7 +13,7 @@ Live at [drewdella.com](https://drewdella.com).
 - The shop has nothing for sale yet, so it shows a search-engine empty state instead of a 404.
 - Site search ranks title matches above body matches across pages, CMS documents and the stored videos.
 - A Hangouts-style chat widget that visitors can post to. It is rate limited on the server.
-- A map of live-show venues using Mapbox.
+- A map of live-show venues using MapLibre and OpenFreeMap tiles.
 - Content (releases, lyrics, blog posts, image gallery, social links, venues) lives in Sanity. The only Studio is the embedded one at [drewdella.com/studio](https://drewdella.com/studio). The separately hosted Studio at drewdella.sanity.studio is retired. Do not redeploy it.
 
 ## How the YouTube list works
@@ -26,7 +26,7 @@ CMS photos are served from Sanity's CDN (`cdn.sanity.io`), not Vercel Image Opti
 
 ## Stack
 
-Next.js 16 (App Router), React 19, plain CSS, Sanity, Mapbox GL, Turf, deployed on Vercel.
+Next.js 16 (App Router), React 19, plain CSS, Sanity, MapLibre GL, Turf, deployed on Vercel.
 
 ## Running it locally
 
@@ -40,7 +40,6 @@ npm run dev
 
 Then open http://localhost:3000. The Sanity dataset is public-read, so the site renders without any tokens. Fill in `.env.local` for the parts that need it:
 
-- `NEXT_PUBLIC_MAPBOX_TOKEN`, a public `pk.` token, for the Maps tab
 - `YOUTUBE_API_KEY` and `YOUTUBE_CHANNEL_ID` for the video sync
 - `SANITY_API_TOKEN`, an editor token used only on the server for chat posts and the video sync
 - `CRON_SECRET`, a random string the cron request must send
