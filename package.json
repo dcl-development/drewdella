@@ -16,12 +16,12 @@
   "dependencies": {
     "@sanity/client": "^8.14.1",
     "@sanity/image-url": "^2.1.1",
-    "@sanity/vision": "^6.21.0",
+    "@sanity/vision": "^6.22.0",
     "@turf/turf": "^7.4.0",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/speed-insights": "^2.0.0",
+    "@vercel/speed-insights": "^2.1.0",
     "maplibre-gl": "^5.24.0",
-    "next": "16.4.3",
+    "next": "16.4.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "sanity": "^6.21.0",
@@ -29,7 +29,7 @@
     "styled-components": "^6.6.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
-    "baseline-browser-mapping": "^2.11.32"
+    "@playwright/test": "^1.65.0",
+    "baseline-browser-mapping": "^2.11.35"
   }
 }
