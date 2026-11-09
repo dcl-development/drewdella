@@ -115,7 +115,10 @@ export default function Map({ locations = [], loadError = "" }) {
     let cancelled = false;
 
     (async () => {
-      const maplibregl = (await import("maplibre-gl")).default;
+      const maplibregl = await import("maplibre-gl");
+      maplibregl.setWorkerUrl(
+        new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString()
+      );
       await import("maplibre-gl/dist/maplibre-gl.css");
       if (cancelled || !mapNode.current) return;
 
@@ -128,6 +131,7 @@ export default function Map({ locations = [], loadError = "" }) {
         attributionControl: false,
         pitch: 0,
         bearing: 0,
+        zoomLevelsToOverscale: undefined,
         transformStyle: (_previous, next) => {
           next.glyphs = ROBOTO_GLYPHS;
           return next;
