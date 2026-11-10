@@ -480,7 +480,18 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
               <div className="images-panel-suggested">
                 <div className="images-suggested-grid">
                   {suggested.map((image) => (
-                    <div key={imageKey(image)} className="images-suggested-card">
+                    <div
+                      key={imageKey(image)}
+                      className="images-suggested-card"
+                      style={
+                        image.asset
+                          ? {
+                              aspectRatio:
+                                thumbAspectRatio(image.asset) || "4 / 3",
+                            }
+                          : undefined
+                      }
+                    >
                       <button
                         type="button"
                         className="images-suggested-thumb"
