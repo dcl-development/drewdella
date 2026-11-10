@@ -220,6 +220,11 @@
   margin-top: 1px;
 }
 
+/* Videos tab only — All keeps default .serp-snippet (2 lines). */
+.video-result-desc--one-line {
+  -webkit-line-clamp: 1;
+}
+
 .serp-related {
   margin: 36px 0 28px;
 }

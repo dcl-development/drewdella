@@ -77,7 +77,12 @@ function VideosPage({ initialVideos = null, initialElapsed = "0.12" }) {
   return (
     <SearchResults count={videos.length} elapsed={elapsed}>
       {videos.map((video, index) => (
-        <VideoResult key={video.id} video={video} priority={index === 0} />
+        <VideoResult
+          key={video.id}
+          video={video}
+          priority={index === 0}
+          snippetLines={1}
+        />
       ))}
     </SearchResults>
   );
