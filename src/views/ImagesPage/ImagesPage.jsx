@@ -288,9 +288,8 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
 
     window.addEventListener("keydown", onKeyDown);
 
-    const isMobile = window.matchMedia("(max-width: 899px)").matches;
     const prevOverflow = document.body.style.overflow;
-    if (isMobile) document.body.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
