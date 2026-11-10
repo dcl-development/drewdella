@@ -493,9 +493,6 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
                       >
                         <ThumbImage asset={image.asset} alt={image.alt} />
                       </button>
-                      <p className="images-suggested-title">
-                        {imageLabel(image)}
-                      </p>
                     </div>
                   ))}
                 </div>

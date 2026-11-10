@@ -149,7 +149,7 @@
 
 .video-result {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   margin: 0 0 22px;
 }
