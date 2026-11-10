@@ -56,10 +56,16 @@
   border-radius: 22px 22px 0 0;
 }
 
+/* Open shell already draws the #4d90fe frame; avoid a second ring on the input (PR #34). */
+.searchbar-container--open .searchbar-input:focus-visible {
+  outline: none;
+}
+
 .dropdown-menu {
   position: absolute;
-  left: -1px;
-  right: -1px;
+  /* Match shell border width under html zoom (--ui-zoom scales 1px borders down). */
+  left: calc(-1px / var(--ui-zoom, 1));
+  right: calc(-1px / var(--ui-zoom, 1));
   top: 100%;
   z-index: 2;
   margin: 0;

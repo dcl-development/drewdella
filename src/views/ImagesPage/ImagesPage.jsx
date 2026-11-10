@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import { urlFor } from "../../lib/imageUrl";
 import { SerpFooter } from "../../components/SearchResults/SearchResults.jsx";
@@ -287,15 +288,67 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
 
     window.addEventListener("keydown", onKeyDown);
 
-    const isMobile = window.matchMedia("(max-width: 899px)").matches;
     const prevOverflow = document.body.style.overflow;
-    if (isMobile) document.body.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
   }, [activeImage, closePanel]);
+
+  /* Desktop rail top: header + tabs height (varies with --ui-zoom), not a fixed px guess. */
+  useEffect(() => {
+    if (!activeImage) {
+      document.documentElement.style.removeProperty("--images-panel-top");
+      return undefined;
+    }
+
+    const syncTop = () => {
+      const nav = document.querySelector(".nav-tabs");
+      if (!nav) return;
+      const top = Math.ceil(nav.getBoundingClientRect().bottom);
+      document.documentElement.style.setProperty("--images-panel-top", `${top}px`);
+    };
+
+    syncTop();
+    window.addEventListener("resize", syncTop);
+    return () => {
+      window.removeEventListener("resize", syncTop);
+      document.documentElement.style.removeProperty("--images-panel-top");
+    };
+  }, [activeImage]);
+
+  /* Hero max = panel height minus bar + meta so title/actions stay in view (zoom-safe). */
+  useEffect(() => {
+    if (!activeImage) {
+      document.documentElement.style.removeProperty("--images-panel-hero-max");
+      return undefined;
+    }
+
+    const syncHeroMax = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      const bar = panel.querySelector(".images-panel-bar");
+      const meta = panel.querySelector(".images-panel-meta");
+      if (!bar || !meta) return;
+      const max =
+        panel.clientHeight - bar.offsetHeight - meta.offsetHeight;
+      document.documentElement.style.setProperty(
+        "--images-panel-hero-max",
+        `${Math.max(96, max)}px`
+      );
+    };
+
+    syncHeroMax();
+    const raf = window.requestAnimationFrame(syncHeroMax);
+    window.addEventListener("resize", syncHeroMax);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", syncHeroMax);
+      document.documentElement.style.removeProperty("--images-panel-hero-max");
+    };
+  }, [activeImage, panelTitle, actionNote]);
 
   if (!images.length) {
     return (
@@ -362,8 +415,8 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
         </div>
       </div>
 
-      {activeImage && (
-        <>
+      {activeImage &&
+        createPortal(
           <aside
             ref={panelRef}
             className="images-panel"
@@ -457,7 +510,18 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
               <div className="images-panel-suggested">
                 <div className="images-suggested-grid">
                   {suggested.map((image) => (
-                    <div key={imageKey(image)} className="images-suggested-card">
+                    <div
+                      key={imageKey(image)}
+                      className="images-suggested-card"
+                      style={
+                        image.asset
+                          ? {
+                              aspectRatio:
+                                thumbAspectRatio(image.asset) || "4 / 3",
+                            }
+                          : undefined
+                      }
+                    >
                       <button
                         type="button"
                         className="images-suggested-thumb"
@@ -470,17 +534,14 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
                       >
                         <ThumbImage asset={image.asset} alt={image.alt} />
                       </button>
-                      <p className="images-suggested-title">
-                        {imageLabel(image)}
-                      </p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-          </aside>
-        </>
-      )}
+          </aside>,
+          document.body
+        )}
     </>
   );
 }

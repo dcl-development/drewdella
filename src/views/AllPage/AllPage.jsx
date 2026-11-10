@@ -294,7 +294,7 @@ export default function AllPage({ feed = null }) {
 
   const mixedListings = mixedWithVideo.map((entry) =>
     entry.kind === "video" ? (
-      <VideoResult key={entry.item.id} video={entry.item} />
+      <VideoResult key={entry.item.id} video={entry.item} snippetLines={1} />
     ) : (
       renderMixed(entry, entry.item._id)
     )

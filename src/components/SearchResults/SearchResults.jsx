@@ -283,7 +283,7 @@ function videoDescriptionSnippet(description, title, max = 140) {
   return snippetFromPortableText(line, max);
 }
 
-export function VideoResult({ video, priority = false }) {
+export function VideoResult({ video, priority = false, snippetLines }) {
   if (!video) return null;
 
   const href = `https://www.youtube.com/watch?v=${video.id}`;
@@ -342,7 +342,13 @@ export function VideoResult({ video, priority = false }) {
         </cite>
         {meta ? <p className="serp-snippet video-result-meta">{meta}</p> : null}
         {description ? (
-          <p className="serp-snippet video-result-desc">{description}</p>
+          <p
+            className={`serp-snippet video-result-desc${
+              snippetLines === 1 ? " video-result-desc--one-line" : ""
+            }`}
+          >
+            {description}
+          </p>
         ) : null}
       </div>
     </div>

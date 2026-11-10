@@ -149,7 +149,7 @@
 
 .video-result {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   margin: 0 0 22px;
 }
@@ -158,7 +158,7 @@
   position: relative;
   flex: 0 0 auto;
   width: 120px;
-  height: 90px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #eee;
   border: 1px solid #ccc;
@@ -220,6 +220,11 @@
   margin-top: 1px;
 }
 
+/* Videos tab only — All keeps default .serp-snippet (2 lines). */
+.video-result-desc--one-line {
+  -webkit-line-clamp: 1;
+}
+
 .serp-related {
   margin: 36px 0 28px;
 }
@@ -265,7 +270,6 @@
 
   .video-result-thumb {
     width: 96px;
-    height: 72px;
   }
 
   .serp-related ul {
