@@ -253,15 +253,9 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
     const shareUrl = key
       ? `${window.location.origin}${pathname}?img=${encodeURIComponent(key)}`
       : `${window.location.origin}${pathname}`;
-    const shareLabel = activeImage.caption || activeImage.alt || "";
-    const payload = { url: shareUrl };
-    if (shareLabel) {
-      payload.title = shareLabel;
-      payload.text = shareLabel;
-    }
     try {
       if (navigator.share) {
-        await navigator.share(payload);
+        await navigator.share({ url: shareUrl });
         return;
       }
       if (navigator.clipboard?.writeText) {
