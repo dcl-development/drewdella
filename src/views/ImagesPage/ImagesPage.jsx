@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import { urlFor } from "../../lib/imageUrl";
 import { SerpFooter } from "../../components/SearchResults/SearchResults.jsx";
@@ -297,6 +298,28 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
     };
   }, [activeImage, closePanel]);
 
+  /* Desktop rail top: header + tabs height (varies with --ui-zoom), not a fixed px guess. */
+  useEffect(() => {
+    if (!activeImage) {
+      document.documentElement.style.removeProperty("--images-panel-top");
+      return undefined;
+    }
+
+    const syncTop = () => {
+      const nav = document.querySelector(".nav-tabs");
+      if (!nav) return;
+      const top = Math.ceil(nav.getBoundingClientRect().bottom);
+      document.documentElement.style.setProperty("--images-panel-top", `${top}px`);
+    };
+
+    syncTop();
+    window.addEventListener("resize", syncTop);
+    return () => {
+      window.removeEventListener("resize", syncTop);
+      document.documentElement.style.removeProperty("--images-panel-top");
+    };
+  }, [activeImage]);
+
   if (!images.length) {
     return (
       <div className="images-empty">
@@ -362,8 +385,8 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
         </div>
       </div>
 
-      {activeImage && (
-        <>
+      {activeImage &&
+        createPortal(
           <aside
             ref={panelRef}
             className="images-panel"
@@ -478,9 +501,9 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
                 </div>
               </div>
             )}
-          </aside>
-        </>
-      )}
+          </aside>,
+          document.body
+        )}
     </>
   );
 }

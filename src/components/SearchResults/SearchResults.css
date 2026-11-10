@@ -158,7 +158,7 @@
   position: relative;
   flex: 0 0 auto;
   width: 120px;
-  height: 90px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #eee;
   border: 1px solid #ccc;
@@ -265,7 +265,6 @@
 
   .video-result-thumb {
     width: 96px;
-    height: 72px;
   }
 
   .serp-related ul {

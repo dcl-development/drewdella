@@ -123,7 +123,8 @@
 /* ---- Detail panel ---- */
 .images-panel {
   position: fixed;
-  z-index: 1200;
+  /* Above Hangouts (1200) and XP promo (1250) */
+  z-index: 1300;
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -141,7 +142,7 @@
 
 @media (min-width: 900px) {
   .images-panel {
-    top: 105px;
+    top: var(--images-panel-top, 105px);
     right: 0;
     bottom: 0;
     width: min(520px, 46vw);
