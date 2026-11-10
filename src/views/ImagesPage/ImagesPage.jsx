@@ -180,12 +180,15 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
 
   const openImage = useCallback(
     (image) => {
+      if (activeImage && imageKey(activeImage) === imageKey(image)) {
+        return;
+      }
       setHeroReady(false);
       setActiveImage(image);
       setSuggested(shuffle(images.filter((img) => imageKey(img) !== imageKey(image))));
       syncImgParam(image);
     },
-    [images, syncImgParam]
+    [activeImage, images, syncImgParam]
   );
 
   const closePanel = useCallback(() => {
@@ -306,12 +309,44 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
 
     window.addEventListener("keydown", onKeyDown);
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const mq = window.matchMedia("(max-width: 899px)");
+    let prevOverflow = document.body.style.overflow;
+
+    const syncBodyLock = () => {
+      if (mq.matches) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = prevOverflow;
+      }
+    };
+
+    syncBodyLock();
+    mq.addEventListener("change", syncBodyLock);
+
+    const onPanelWheel = (e) => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      if (panel.scrollHeight <= panel.clientHeight) {
+        e.preventDefault();
+        return;
+      }
+      const { scrollTop, scrollHeight, clientHeight } = panel;
+      const delta = e.deltaY;
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+      if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+        e.preventDefault();
+      }
+    };
+
+    const panel = panelRef.current;
+    panel?.addEventListener("wheel", onPanelWheel, { passive: false });
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
+      mq.removeEventListener("change", syncBodyLock);
       document.body.style.overflow = prevOverflow;
+      panel?.removeEventListener("wheel", onPanelWheel);
     };
   }, [activeImage, closePanel]);
 
