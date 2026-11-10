@@ -387,7 +387,6 @@ function HangoutsChat() {
             <span className="hangouts-launcher-icon" />
           )}
         </span>
-        {showOpen ? <span className="hangouts-launcher-label">Close</span> : null}
       </button>
     </div>
   );
