@@ -226,27 +226,31 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
   }, [activeUrl]);
 
   const handleShare = useCallback(async () => {
-    if (!activeUrl) return;
-    const pageUrl = `${window.location.origin}/images`;
-    const payload = {
-      title: panelTitle,
-      text: panelTitle,
-      url: pageUrl,
-    };
+    if (!activeImage || !activeUrl) return;
+    const key = imageKey(activeImage);
+    const shareUrl = key
+      ? `${window.location.origin}${pathname}?img=${encodeURIComponent(key)}`
+      : `${window.location.origin}${pathname}`;
+    const shareLabel = activeImage.caption || activeImage.alt || "";
+    const payload = { url: shareUrl };
+    if (shareLabel) {
+      payload.title = shareLabel;
+      payload.text = shareLabel;
+    }
     try {
       if (navigator.share) {
         await navigator.share(payload);
         return;
       }
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(pageUrl);
+        await navigator.clipboard.writeText(shareUrl);
         setActionNote("Link copied");
         window.setTimeout(() => setActionNote(""), 2000);
       }
     } catch {
       /* user cancelled share */
     }
-  }, [activeUrl, panelTitle]);
+  }, [activeImage, activeUrl, pathname]);
 
   const handleSave = useCallback(() => {
     if (!activeUrl) return;
