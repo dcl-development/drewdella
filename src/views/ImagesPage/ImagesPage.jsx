@@ -50,6 +50,22 @@ function IconShare({ className = "images-btn-icon images-btn-icon--md" }) {
   );
 }
 
+function IconChevronLeft({ className = "images-btn-icon" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width={20} height={20} aria-hidden>
+      <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+    </svg>
+  );
+}
+
+function IconChevronRight({ className = "images-btn-icon" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width={20} height={20} aria-hidden>
+      <path fill="currentColor" d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+    </svg>
+  );
+}
+
 function IconBookmark({ className = "images-btn-icon images-btn-icon--md" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" width={18} height={18} aria-hidden>
@@ -191,6 +207,23 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
     [activeImage, images, syncImgParam]
   );
 
+  const activeIndex = useMemo(() => {
+    if (!activeImage) return -1;
+    return images.findIndex((img) => imageKey(img) === imageKey(activeImage));
+  }, [images, activeImage]);
+
+  const canGoPrev = activeIndex > 0;
+  const canGoNext = activeIndex >= 0 && activeIndex < images.length - 1;
+
+  const goToRelative = useCallback(
+    (delta) => {
+      if (activeIndex < 0) return;
+      const next = images[activeIndex + delta];
+      if (next) openImage(next);
+    },
+    [activeIndex, images, openImage]
+  );
+
   const closePanel = useCallback(() => {
     heroLoadId.current += 1;
     setActiveImage(null);
@@ -298,7 +331,12 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
     if (!activeImage) return undefined;
 
     const onKeyDown = (e) => {
+      if (e.target?.closest?.("input, textarea, select, [contenteditable='true']")) {
+        return;
+      }
       if (e.key === "Escape") closePanel();
+      if (e.key === "ArrowLeft") goToRelative(-1);
+      if (e.key === "ArrowRight") goToRelative(1);
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -342,7 +380,7 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
       document.body.style.overflow = prevOverflow;
       panel?.removeEventListener("wheel", onPanelWheel);
     };
-  }, [activeImage, closePanel]);
+  }, [activeImage, closePanel, goToRelative]);
 
   /* Desktop rail top: header + tabs height (varies with --ui-zoom), not a fixed px guess. */
   useEffect(() => {
@@ -472,8 +510,25 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
             aria-label={panelTitle}
           >
             <div className="images-panel-bar">
-              <div className="images-panel-source">
-                <span>{SOURCE_NAME}</span>
+              <div className="images-panel-nav">
+                <button
+                  type="button"
+                  className="images-panel-nav-btn"
+                  onClick={() => goToRelative(-1)}
+                  disabled={!canGoPrev}
+                  aria-label="Previous image"
+                >
+                  <IconChevronLeft />
+                </button>
+                <button
+                  type="button"
+                  className="images-panel-nav-btn"
+                  onClick={() => goToRelative(1)}
+                  disabled={!canGoNext}
+                  aria-label="Next image"
+                >
+                  <IconChevronRight />
+                </button>
               </div>
               <button
                 type="button"
