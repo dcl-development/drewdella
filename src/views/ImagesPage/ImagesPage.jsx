@@ -3,12 +3,13 @@
 import React, {
   useState,
   useEffect,
+  useLayoutEffect,
   useCallback,
   useMemo,
   useRef,
 } from "react";
 import { createPortal } from "react-dom";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { urlFor } from "../../lib/imageUrl";
 import { SerpFooter } from "../../components/SearchResults/SearchResults.jsx";
 import SerpMessage from "../../components/SerpMessage/SerpMessage.jsx";
@@ -62,6 +63,15 @@ function IconBookmark({ className = "images-btn-icon images-btn-icon--md" }) {
 
 function imageKey(image) {
   return image?.id || image?.asset?._id || "";
+}
+
+function findImageByParam(images, want) {
+  if (!want || !images?.length) return null;
+  return (
+    images.find(
+      (img) => imageKey(img) === want || img.asset?._id === want
+    ) ?? null
+  );
 }
 
 function shuffle(items) {
@@ -137,6 +147,7 @@ function ThumbImage({ asset, alt, priority = false }) {
 function ImagesPage({ images = [], elapsed = "0.12" }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [activeImage, setActiveImage] = useState(null);
   const [suggested, setSuggested] = useState([]);
   const [heroSrc, setHeroSrc] = useState("");
@@ -145,7 +156,15 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
   const closeBtnRef = useRef(null);
   const panelRef = useRef(null);
   const heroLoadId = useRef(0);
-  const openedFromQuery = useRef(false);
+
+  const imgFromUrl = useMemo(() => {
+    const fromHook = searchParams.get("img");
+    if (fromHook) return fromHook;
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("img") || "";
+    }
+    return "";
+  }, [searchParams]);
 
   const syncImgParam = useCallback(
     (image) => {
@@ -264,24 +283,19 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
     closeBtnRef.current?.focus();
   }, [activeImage]);
 
-  /* Open panel when arriving from All (or a shared ?img= link).
-     Read the query here so the grid can render in the first HTML. */
-  useEffect(() => {
-    if (!images.length || openedFromQuery.current) return;
-    const want = new URLSearchParams(window.location.search).get("img");
-    if (!want) return;
-    const match = images.find(
-      (img) => imageKey(img) === want || img.asset?._id === want
+  /* Open panel when arriving from All, Share, or a direct ?img= load. */
+  useLayoutEffect(() => {
+    if (!images.length) return;
+    if (!imgFromUrl) return;
+    const match = findImageByParam(images, imgFromUrl);
+    if (!match) return;
+    if (imageKey(activeImage) === imageKey(match)) return;
+    setHeroReady(false);
+    setActiveImage(match);
+    setSuggested(
+      shuffle(images.filter((img) => imageKey(img) !== imageKey(match)))
     );
-    if (match) {
-      openedFromQuery.current = true;
-      setHeroReady(false);
-      setActiveImage(match);
-      setSuggested(
-        shuffle(images.filter((img) => imageKey(img) !== imageKey(match)))
-      );
-    }
-  }, [images]);
+  }, [images, imgFromUrl, activeImage]);
 
   useEffect(() => {
     if (!activeImage) return undefined;
