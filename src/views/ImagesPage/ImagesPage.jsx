@@ -3,12 +3,13 @@
 import React, {
   useState,
   useEffect,
+  useLayoutEffect,
   useCallback,
   useMemo,
   useRef,
 } from "react";
 import { createPortal } from "react-dom";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { urlFor } from "../../lib/imageUrl";
 import { SerpFooter } from "../../components/SearchResults/SearchResults.jsx";
 import SerpMessage from "../../components/SerpMessage/SerpMessage.jsx";
@@ -49,6 +50,22 @@ function IconShare({ className = "images-btn-icon images-btn-icon--md" }) {
   );
 }
 
+function IconChevronLeft({ className = "images-btn-icon" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width={20} height={20} aria-hidden>
+      <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+    </svg>
+  );
+}
+
+function IconChevronRight({ className = "images-btn-icon" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width={20} height={20} aria-hidden>
+      <path fill="currentColor" d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+    </svg>
+  );
+}
+
 function IconBookmark({ className = "images-btn-icon images-btn-icon--md" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" width={18} height={18} aria-hidden>
@@ -62,6 +79,15 @@ function IconBookmark({ className = "images-btn-icon images-btn-icon--md" }) {
 
 function imageKey(image) {
   return image?.id || image?.asset?._id || "";
+}
+
+function findImageByParam(images, want) {
+  if (!want || !images?.length) return null;
+  return (
+    images.find(
+      (img) => imageKey(img) === want || img.asset?._id === want
+    ) ?? null
+  );
 }
 
 function shuffle(items) {
@@ -137,6 +163,7 @@ function ThumbImage({ asset, alt, priority = false }) {
 function ImagesPage({ images = [], elapsed = "0.12" }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [activeImage, setActiveImage] = useState(null);
   const [suggested, setSuggested] = useState([]);
   const [heroSrc, setHeroSrc] = useState("");
@@ -145,7 +172,15 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
   const closeBtnRef = useRef(null);
   const panelRef = useRef(null);
   const heroLoadId = useRef(0);
-  const openedFromQuery = useRef(false);
+
+  const imgFromUrl = useMemo(() => {
+    const fromHook = searchParams.get("img");
+    if (fromHook) return fromHook;
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("img") || "";
+    }
+    return "";
+  }, [searchParams]);
 
   const syncImgParam = useCallback(
     (image) => {
@@ -161,12 +196,32 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
 
   const openImage = useCallback(
     (image) => {
+      if (activeImage && imageKey(activeImage) === imageKey(image)) {
+        return;
+      }
       setHeroReady(false);
       setActiveImage(image);
       setSuggested(shuffle(images.filter((img) => imageKey(img) !== imageKey(image))));
       syncImgParam(image);
     },
-    [images, syncImgParam]
+    [activeImage, images, syncImgParam]
+  );
+
+  const activeIndex = useMemo(() => {
+    if (!activeImage) return -1;
+    return images.findIndex((img) => imageKey(img) === imageKey(activeImage));
+  }, [images, activeImage]);
+
+  const canGoPrev = activeIndex > 0;
+  const canGoNext = activeIndex >= 0 && activeIndex < images.length - 1;
+
+  const goToRelative = useCallback(
+    (delta) => {
+      if (activeIndex < 0) return;
+      const next = images[activeIndex + delta];
+      if (next) openImage(next);
+    },
+    [activeIndex, images, openImage]
   );
 
   const closePanel = useCallback(() => {
@@ -226,27 +281,25 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
   }, [activeUrl]);
 
   const handleShare = useCallback(async () => {
-    if (!activeUrl) return;
-    const pageUrl = `${window.location.origin}/images`;
-    const payload = {
-      title: panelTitle,
-      text: panelTitle,
-      url: pageUrl,
-    };
+    if (!activeImage || !activeUrl) return;
+    const key = imageKey(activeImage);
+    const shareUrl = key
+      ? `${window.location.origin}${pathname}?img=${encodeURIComponent(key)}`
+      : `${window.location.origin}${pathname}`;
     try {
       if (navigator.share) {
-        await navigator.share(payload);
+        await navigator.share({ url: shareUrl });
         return;
       }
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(pageUrl);
+        await navigator.clipboard.writeText(shareUrl);
         setActionNote("Link copied");
         window.setTimeout(() => setActionNote(""), 2000);
       }
     } catch {
       /* user cancelled share */
     }
-  }, [activeUrl, panelTitle]);
+  }, [activeImage, activeUrl, pathname]);
 
   const handleSave = useCallback(() => {
     if (!activeUrl) return;
@@ -260,42 +313,74 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
     closeBtnRef.current?.focus();
   }, [activeImage]);
 
-  /* Open panel when arriving from All (or a shared ?img= link).
-     Read the query here so the grid can render in the first HTML. */
-  useEffect(() => {
-    if (!images.length || openedFromQuery.current) return;
-    const want = new URLSearchParams(window.location.search).get("img");
-    if (!want) return;
-    const match = images.find(
-      (img) => imageKey(img) === want || img.asset?._id === want
+  /* Open panel when arriving from All, Share, or a direct ?img= load. */
+  useLayoutEffect(() => {
+    if (!images.length) return;
+    if (!imgFromUrl) return;
+    const match = findImageByParam(images, imgFromUrl);
+    if (!match) return;
+    if (imageKey(activeImage) === imageKey(match)) return;
+    setHeroReady(false);
+    setActiveImage(match);
+    setSuggested(
+      shuffle(images.filter((img) => imageKey(img) !== imageKey(match)))
     );
-    if (match) {
-      openedFromQuery.current = true;
-      setHeroReady(false);
-      setActiveImage(match);
-      setSuggested(
-        shuffle(images.filter((img) => imageKey(img) !== imageKey(match)))
-      );
-    }
-  }, [images]);
+  }, [images, imgFromUrl, activeImage]);
 
   useEffect(() => {
     if (!activeImage) return undefined;
 
     const onKeyDown = (e) => {
+      if (e.target?.closest?.("input, textarea, select, [contenteditable='true']")) {
+        return;
+      }
       if (e.key === "Escape") closePanel();
+      if (e.key === "ArrowLeft") goToRelative(-1);
+      if (e.key === "ArrowRight") goToRelative(1);
     };
 
     window.addEventListener("keydown", onKeyDown);
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const mq = window.matchMedia("(max-width: 899px)");
+    let prevOverflow = document.body.style.overflow;
+
+    const syncBodyLock = () => {
+      if (mq.matches) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = prevOverflow;
+      }
+    };
+
+    syncBodyLock();
+    mq.addEventListener("change", syncBodyLock);
+
+    const onPanelWheel = (e) => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      if (panel.scrollHeight <= panel.clientHeight) {
+        e.preventDefault();
+        return;
+      }
+      const { scrollTop, scrollHeight, clientHeight } = panel;
+      const delta = e.deltaY;
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+      if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+        e.preventDefault();
+      }
+    };
+
+    const panel = panelRef.current;
+    panel?.addEventListener("wheel", onPanelWheel, { passive: false });
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
+      mq.removeEventListener("change", syncBodyLock);
       document.body.style.overflow = prevOverflow;
+      panel?.removeEventListener("wheel", onPanelWheel);
     };
-  }, [activeImage, closePanel]);
+  }, [activeImage, closePanel, goToRelative]);
 
   /* Desktop rail top: header + tabs height (varies with --ui-zoom), not a fixed px guess. */
   useEffect(() => {
@@ -425,8 +510,25 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
             aria-label={panelTitle}
           >
             <div className="images-panel-bar">
-              <div className="images-panel-source">
-                <span>{SOURCE_NAME}</span>
+              <div className="images-panel-nav">
+                <button
+                  type="button"
+                  className="images-panel-nav-btn"
+                  onClick={() => goToRelative(-1)}
+                  disabled={!canGoPrev}
+                  aria-label="Previous image"
+                >
+                  <IconChevronLeft />
+                </button>
+                <button
+                  type="button"
+                  className="images-panel-nav-btn"
+                  onClick={() => goToRelative(1)}
+                  disabled={!canGoNext}
+                  aria-label="Next image"
+                >
+                  <IconChevronRight />
+                </button>
               </div>
               <button
                 type="button"

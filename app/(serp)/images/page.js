@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ImagesPage from "@/views/ImagesPage/ImagesPage.jsx";
 import SerpMessage from "@/components/SerpMessage/SerpMessage.jsx";
 import { getGallery } from "@/lib/content";
@@ -21,7 +22,11 @@ export async function generateMetadata() {
 export default async function Page() {
   try {
     const { images, elapsed } = await getGallery();
-    return <ImagesPage images={images || []} elapsed={elapsed} />;
+    return (
+      <Suspense fallback={null}>
+        <ImagesPage images={images || []} elapsed={elapsed} />
+      </Suspense>
+    );
   } catch (error) {
     console.error("Images page error:", error);
     return (
