@@ -140,13 +140,6 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .images-panel-hero {
-    max-height: calc(100dvh - 13.5rem);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
 }
 
 @media (min-width: 900px) {
@@ -160,15 +153,6 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .images-panel-hero {
-    max-height: calc(
-      100dvh - var(--images-panel-top, 105px) - 12.5rem
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
 }
 
 .images-panel-note {
@@ -237,7 +221,7 @@
   width: 100%;
   max-width: 100%;
   height: auto;
-  max-height: 100%;
+  max-height: min(640px, var(--images-panel-hero-max, 50vh));
   object-fit: contain;
   border-radius: 0;
   background: transparent;

@@ -319,6 +319,37 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
     };
   }, [activeImage]);
 
+  /* Hero max = panel height minus bar + meta so title/actions stay in view (zoom-safe). */
+  useEffect(() => {
+    if (!activeImage) {
+      document.documentElement.style.removeProperty("--images-panel-hero-max");
+      return undefined;
+    }
+
+    const syncHeroMax = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      const bar = panel.querySelector(".images-panel-bar");
+      const meta = panel.querySelector(".images-panel-meta");
+      if (!bar || !meta) return;
+      const max =
+        panel.clientHeight - bar.offsetHeight - meta.offsetHeight;
+      document.documentElement.style.setProperty(
+        "--images-panel-hero-max",
+        `${Math.max(96, max)}px`
+      );
+    };
+
+    syncHeroMax();
+    const raf = window.requestAnimationFrame(syncHeroMax);
+    window.addEventListener("resize", syncHeroMax);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", syncHeroMax);
+      document.documentElement.style.removeProperty("--images-panel-hero-max");
+    };
+  }, [activeImage, panelTitle, actionNote]);
+
   if (!images.length) {
     return (
       <div className="images-empty">
