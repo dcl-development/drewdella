@@ -11,6 +11,8 @@ export default defineConfig({
   projectId: 'qcu6o4bq',
   dataset: 'production',
 
+  releases: {enabled: false},
+
   plugins: [structureTool(), visionTool()],
 
   schema: {
