@@ -32,3 +32,11 @@
   flex-direction: column;
   margin: 0;
 }
+
+/* One shared outer width for the header, tabs, and page content. */
+.site-layout--contained {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
