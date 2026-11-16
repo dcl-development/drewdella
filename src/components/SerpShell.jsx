@@ -39,7 +39,7 @@ export default function SerpShell({ children }) {
   }, [pathname]);
 
   return (
-    <div className={`site-layout${isMaps ? " site-layout--maps" : ""}`}>
+    <div className={`site-layout ${isMaps ? "site-layout--maps" : "site-layout--contained"}`}>
       <Header currentPath={pathname} />
       <NavTabs />
       <main

@@ -1,7 +1,11 @@
 .header-home {
   display: flex;
   justify-content: space-between;
-  padding: 3vh 3vh;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding: 3vh 24px;
   align-items: center;
   background-color: white;
   border-bottom: 1px solid white;

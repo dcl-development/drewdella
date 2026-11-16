@@ -1,17 +1,16 @@
 /* ---- Results grid ---- */
 .images-page {
-  /* Cancel Layout's 1rem gutter; keep a thin even edge */
+  /* Use the same inset as the other result tabs. */
   width: auto;
   max-width: none;
-  margin-left: -1rem;
-  margin-right: -1rem;
+  margin-inline: 0;
   padding: 4px;
   box-sizing: border-box;
   transition: padding-right 0.2s ease;
 }
 
 .images-page--panel-open {
-  /* Page is bled to the viewport edge, so reserve the full rail width */
+  /* Reserve space for the detail panel inside the shared page width. */
   padding-right: min(520px, 46vw);
 }
 
@@ -70,12 +69,6 @@
 @media (min-width: 1200px) {
   .images-masonry-grid {
     column-count: 6;
-  }
-}
-
-@media (min-width: 1536px) {
-  .images-masonry-grid {
-    column-count: 7;
   }
 }
 
@@ -145,7 +138,7 @@
 @media (min-width: 900px) {
   .images-panel {
     top: var(--images-panel-top, 105px);
-    right: 0;
+    right: max(0px, calc((100vw / var(--ui-zoom, 1.2) - 1280px) / 2));
     bottom: 0;
     width: min(520px, 46vw);
     overflow-y: auto;

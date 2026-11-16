@@ -117,7 +117,7 @@ function imageLabel(image) {
 }
 
 const THUMB_SIZES =
-  "(max-width: 599px) 33vw, (max-width: 899px) 25vw, (max-width: 1199px) 20vw, 16vw";
+  "(max-width: 599px) 33vw, (max-width: 899px) 25vw, (max-width: 1199px) 20vw, (max-width: 1535px) 16vw, 210px";
 
 function thumbProps(asset) {
   if (!asset) return null;
