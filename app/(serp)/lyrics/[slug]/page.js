@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import LyricsPage from "@/views/LyricsPage/LyricsPage.jsx";
+import JsonLd from "@/components/JsonLd.jsx";
 import { getLyric, getLyricsList } from "@/lib/content";
-import { pageMetadataAsync } from "@/lib/seo";
+import { lyricsJsonLd, notFoundMetadata, pageMetadataAsync } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -17,11 +18,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const song = await getLyric(slug).catch(() => null);
   if (!song) {
-    return pageMetadataAsync({
-      title: "Lyrics",
-      description: "Lyrics by Drew Della.",
-      path: "/lyrics",
-    });
+    return notFoundMetadata();
   }
   const description = song.album
     ? `${song.title} lyrics from ${song.album} by Drew Della.`
@@ -37,5 +34,10 @@ export default async function Page({ params }) {
   const { slug } = await params;
   const song = await getLyric(slug).catch(() => null);
   if (!song) notFound();
-  return <LyricsPage slug={slug} initialSong={song} />;
+  return (
+    <>
+      <JsonLd data={lyricsJsonLd(song, slug)} />
+      <LyricsPage slug={slug} initialSong={song} />
+    </>
+  );
 }

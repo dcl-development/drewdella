@@ -173,14 +173,10 @@ function ImagesPage({ images = [], elapsed = "0.12" }) {
   const panelRef = useRef(null);
   const heroLoadId = useRef(0);
 
-  const imgFromUrl = useMemo(() => {
-    const fromHook = searchParams.get("img");
-    if (fromHook) return fromHook;
-    if (typeof window !== "undefined") {
-      return new URLSearchParams(window.location.search).get("img") || "";
-    }
-    return "";
-  }, [searchParams]);
+  const imgFromUrl = useMemo(
+    () => searchParams.get("img") || "",
+    [searchParams]
+  );
 
   const syncImgParam = useCallback(
     (image) => {

@@ -30,7 +30,7 @@ async function waitForMapReady(page) {
 async function waitForLiveMapReady(page) {
   await page.goto(LIVE_MAPS, { waitUntil: "domcontentloaded" });
   await expect(
-    page.locator(".gmaps-canvas .mapboxgl-canvas, .gmaps-canvas .maplibregl-canvas")
+    page.locator(".gmaps-canvas .maplibregl-canvas")
   ).toBeVisible({ timeout: 60_000 });
   await expect(page.locator(".gmaps-veil")).toHaveCount(0, { timeout: 60_000 });
   await page.waitForTimeout(1500);

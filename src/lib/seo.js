@@ -60,6 +60,15 @@ export function pageMetadata({
   };
 }
 
+/** Metadata for routes that will call notFound() — avoids wrong canonicals. */
+export function notFoundMetadata() {
+  return {
+    title: { absolute: "Page not found — Drew Della" },
+    description: "This page could not be found.",
+    robots: { index: false, follow: false },
+  };
+}
+
 export async function pageMetadataAsync(options) {
   let imageUrl = options.imageUrl;
   let imageAlt = options.imageAlt;
@@ -118,6 +127,30 @@ export function articleJsonLd(post) {
     url,
     author: { "@type": "Person", name: "Drew Della", url: SITE_URL },
     publisher: { "@type": "Person", name: "Drew Della", url: SITE_URL },
+  };
+}
+
+export function lyricsJsonLd(song, slug) {
+  const url = `${SITE_URL}/lyrics/${slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "MusicComposition",
+    name: song.title,
+    url,
+    inLanguage: "en",
+    ...(song.album
+      ? {
+          isPartOf: {
+            "@type": "MusicAlbum",
+            name: song.album,
+          },
+        }
+      : {}),
+    composer: {
+      "@type": "Person",
+      name: "Drew Della",
+      url: SITE_URL,
+    },
   };
 }
 

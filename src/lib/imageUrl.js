@@ -1,10 +1,10 @@
-import imageUrlBuilder from "@sanity/image-url";
+import { createImageUrlBuilder } from "@sanity/image-url";
 
 /**
  * Builds cdn.sanity.io URLs only. This module must not fetch the Sanity API,
  * so client components can import it without a CORS request.
  */
-const builder = imageUrlBuilder({
+const builder = createImageUrlBuilder({
   projectId: "qcu6o4bq",
   dataset: "production",
 });

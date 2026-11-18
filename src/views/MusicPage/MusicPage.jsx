@@ -10,7 +10,7 @@ function Cover({ release, large = false }) {
       <SanityImage
         className={large ? "kp-cover kp-cover--large" : "kp-cover"}
         src={release.cover}
-        alt={release.coverAlt}
+        alt={release.coverAlt || release.title}
         width={large ? 640 : 72}
         height={large ? 640 : 72}
         sizes={large ? "(max-width: 860px) 100vw, 280px" : "72px"}
@@ -91,7 +91,7 @@ function PanelCover({ release }) {
     <img
       className="kp-cover"
       src={release.cover}
-      alt={release.coverAlt || ""}
+      alt={release.coverAlt || release.title || ""}
       width={800}
       height={800}
       loading="eager"
@@ -233,7 +233,7 @@ export function MusicReleasePage({ release, others = [] }) {
               <figure key={image.src}>
                 <SanityImage
                   src={image.src}
-                  alt={image.alt || ""}
+                  alt={image.alt || image.caption || release.title || ""}
                   width={image.width}
                   height={image.height}
                   sizes="(max-width: 860px) 100vw, 420px"
