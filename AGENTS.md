@@ -17,7 +17,7 @@ cp .env.example .env.local   # only if missing
 npm run dev                  # http://localhost:3000
 ```
 
-Sanity dataset is public-read — pages render without tokens. Content comes only from Sanity. There are no code fallbacks or backup catalogs. `scripts/seed-sanity.mjs` (`npm run seed:sanity`) fills empty Studio fields once and never overwrites a value already set. Fill `.env.local` only for Maps / video sync / chat writes / revalidate / that seed (see `.env.example`). Never put `SANITY_API_TOKEN` in `NEXT_PUBLIC_*`.
+Sanity dataset is public-read — pages render without tokens. Content comes only from Sanity. There are no code fallbacks or backup catalogs. `scripts/seed-sanity.mjs` (`npm run seed:sanity`) fills empty Studio fields once and never overwrites a value already set. Fill `.env.local` only for video sync, chat writes, on-demand revalidate, and `seed:sanity` (see `.env.example`). Map tiles need no API key. Never put `SANITY_API_TOKEN` in `NEXT_PUBLIC_*`.
 
 ## Layout
 

@@ -13,7 +13,7 @@ The server uses `SANITY_API_TOKEN` in two places only:
 - posting chat messages and keeping the chat rate-limit counters (`lib/chat.js`)
 - saving the daily YouTube snapshot (`lib/youtubeVideos.js`, called from `/api/videos-sync`)
 
-The document types are in `studio/schemaTypes/`: `musicRelease`, `song`, `blogPost`, `imageGallery`, `socialLink`, `mapLocation`, `shopLink`, `contact`, `chatMessage` and `youtubeCache`. The only Studio is the embedded one at [drewdella.com/studio](https://drewdella.com/studio) (`/studio`). `public/robots.txt` disallows that path. The separately hosted Studio at drewdella.sanity.studio is retired. `studio/sanity.cli.ts` has no `deployment` block, and `studio/package.json` has no deploy script, so a hosted Studio is not redeployed from this repo. Links that come from the CMS go through `safeHref` (`src/lib/safeHref.js`) before being rendered, so only `http(s)` URLs and same-site paths get through.
+The document types are in `studio/schemaTypes/`: `musicRelease`, `song`, `blogPost`, `imageGallery`, `socialLink`, `mapLocation`, `shopLink`, `contact`, `chatMessage` and `youtubeCache`. The only Studio is the embedded one at [drewdella.com/studio](https://drewdella.com/studio) (`/studio`). `app/robots.js` disallows `/studio` and `/api/`. The separately hosted Studio at drewdella.sanity.studio is retired. `studio/sanity.cli.ts` has no `deployment` block, and `studio/package.json` has no deploy script, so a hosted Studio is not redeployed from this repo. Links that come from the CMS go through `safeHref` (`src/lib/safeHref.js`) before being rendered, so only `http(s)` URLs and same-site paths get through.
 
 ## YouTube snapshot
 
@@ -50,13 +50,16 @@ See `.env.example`.
 | `YOUTUBE_API_KEY` | server | restrict to the YouTube Data API v3 in Google Cloud |
 | `YOUTUBE_CHANNEL_ID` | server | |
 | `SANITY_API_TOKEN` | server | editor token, mark as sensitive on Vercel |
-| `CRON_SECRET` | server | required in production for the sync route |
+| `CRON_SECRET` | server | required in production for the sync route; also salts chat rate-limit bucket ids |
+| `SANITY_REVALIDATE_SECRET` | server | `x-sanity-secret` on `/api/revalidate`; falls back for chat rate-limit salt if `CRON_SECRET` is unset |
 
 The site renders without any of them because content is public-read. Without the server keys the chat can't post and the video sync can't run.
 
 ## Security headers
 
-`next.config.mjs` sets these on every route: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: SAMEORIGIN`, a `Permissions-Policy` that turns off camera, microphone and geolocation, and `Cross-Origin-Opener-Policy: same-origin-allow-popups`.
+`next.config.mjs` sets baseline headers on every route: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: SAMEORIGIN`, a `Permissions-Policy` that turns off camera, microphone and geolocation, `Cross-Origin-Opener-Policy: same-origin-allow-popups`, and HSTS.
+
+`proxy.js` enforces a Content-Security-Policy on public pages (not `/studio` or `/api/*`), allowing OpenFreeMap tiles, Sanity and YouTube image hosts, and Vercel analytics scripts. Studio needs a wider policy, so it is excluded.
 
 ## Deploying
 

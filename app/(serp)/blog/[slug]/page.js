@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import BlogPage from "@/views/BlogPage/BlogPage.jsx";
 import JsonLd from "@/components/JsonLd.jsx";
 import { getBlogList, getBlogPost, getBlogPostShareImageAsset } from "@/lib/content";
-import { articleJsonLd, pageMetadataAsync, shareImageUrl } from "@/lib/seo";
+import {
+  articleJsonLd,
+  notFoundMetadata,
+  pageMetadataAsync,
+  shareImageUrl,
+} from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -18,11 +23,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const post = await getBlogPost(slug).catch(() => null);
   if (!post) {
-    return pageMetadataAsync({
-      title: "Blog",
-      description: "Blog posts by Drew Della.",
-      path: "/blog",
-    });
+    return notFoundMetadata();
   }
   const description =
     String(post.preview || "")

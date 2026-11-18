@@ -7,8 +7,8 @@ import { NextResponse } from "next/server";
  * script Next generates, which breaks streaming and the embedded Studio.
  * 'unsafe-eval' is only added in development (React refresh).
  * /studio is excluded: Sanity Studio loads its own runtime and would need a
- * much wider policy. OpenFreeMap tiles and Roboto glyphs are allow-listed
- * allow-listed below. Public pages load Sanity content on the server, so the
+ * much wider policy. OpenFreeMap tiles and Roboto glyphs are allow-listed below.
+ * Public pages load Sanity content on the server, so the
  * browser is not allowed to call the Sanity API. cdn.sanity.io images stay
  * on img-src.
  */

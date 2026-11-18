@@ -156,7 +156,7 @@ function BlogPage({ slug, initialPost = null, initialPosts = null }) {
                             src={src}
                             srcSet={srcSet}
                             sizes={sizes}
-                            alt={block.alt || ''}
+                            alt={block.alt || block.caption || post?.title || "Blog image"}
                             className={imageClass}
                             loading="lazy"
                             onError={(e) => {

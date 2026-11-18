@@ -43,6 +43,7 @@ Then open http://localhost:3000. The Sanity dataset is public-read, so the site 
 - `YOUTUBE_API_KEY` and `YOUTUBE_CHANNEL_ID` for the video sync
 - `SANITY_API_TOKEN`, an editor token used only on the server for chat posts and the video sync
 - `CRON_SECRET`, a random string the cron request must send
+- `SANITY_REVALIDATE_SECRET`, for Sanity webhooks that trigger on-demand revalidation (`/api/revalidate`)
 
 Only variables starting with `NEXT_PUBLIC_` reach the browser. Never put a Sanity write token in one of those.
 
