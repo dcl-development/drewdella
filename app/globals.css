@@ -61,7 +61,8 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
   .site-main.site-main--motion {
-    animation: serp-main-enter 180ms ease both;
+    /* backwards, not both: a forwards-filled transform keeps <main> as the containing block for position:fixed docks (popup, Hangouts) and pins them to the page bottom. */
+    animation: serp-main-enter 180ms ease backwards;
   }
 
   html.serp-route-enter .serp-list > * {
