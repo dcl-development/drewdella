@@ -10,6 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typegen": "sanity schema extract --enforce-required-fields --force && sanity typegen generate",
+    "prebuild": "npm run typegen",
     "seed:sanity": "node scripts/seed-sanity.mjs",
     "test:e2e": "playwright test"
   },
@@ -20,6 +22,7 @@
     "@turf/turf": "^7.4.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.1.0",
+    "groq": "^6.24.0",
     "maplibre-gl": "^6.19.0",
     "next": "16.4.6",
     "react": "19.3.1",

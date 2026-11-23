@@ -17,11 +17,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@sanity/client";
 import { albumKey } from "../src/lib/slug.js";
+import { loadDotenvLocal } from "../sanity/loadDotenv.js";
+import { getSanityPublicEnv } from "../sanity/readEnv.js";
 
-const PROJECT_ID = "qcu6o4bq";
-const DATASET = "production";
-const CONTACT_EMAIL = "drewdella22@gmail.com";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+loadDotenvLocal(ROOT);
+
+const { projectId: PROJECT_ID, dataset: DATASET, apiVersion } =
+  getSanityPublicEnv();
+const CONTACT_EMAIL = "drewdella22@gmail.com";
 
 const THX4ITALL_STORY = [
   "“My album is out now too. That was also a way I attempted to heal. I don't have much to say except to enjoy it. Enjoy V-day too. Play this album with caution. And to the one who knows , really, thank you for it all, 4 everything.”",
@@ -353,7 +358,7 @@ if (!token) {
 const client = createClient({
   projectId: PROJECT_ID,
   dataset: DATASET,
-  apiVersion: "2024-01-01",
+  apiVersion,
   token,
   useCdn: false,
 });

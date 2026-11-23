@@ -2,6 +2,26 @@ import { cache } from "react";
 import { client, sanityImage } from "./sanity";
 import { resolveShopDestination } from "./shopLink";
 import { albumKey, slugify } from "./slug";
+import {
+  allFeedQuery,
+  blogListQuery,
+  blogPostBySlugQuery,
+  blogPostShareImageQuery,
+  contactEmailQuery,
+  imageGalleryQuery,
+  luckyPathsQuery,
+  lyricBySlugQuery,
+  lyricsListQuery,
+  mapLocationsQuery,
+  musicReleasesQuery,
+  releaseShareImageQuery,
+  shopLinkQuery,
+  siteShareImageQuery,
+  sitemapBlogSlugsQuery,
+  sitemapSongSlugsQuery,
+  socialLinksQuery,
+  songsListQuery,
+} from "./queries";
 
 export { albumKey, slugify };
 
@@ -106,37 +126,13 @@ export function shapeRelease(release, songs = []) {
   };
 }
 
-const RELEASE_FIELDS = `{
-  _id,
-  title,
-  description,
-  url,
-  date,
-  order,
-  year,
-  subtitle,
-  story,
-  featured,
-  "slug": slug.current,
-  cover { alt, asset->{_id, metadata{dimensions}} },
-  links[]{ label, url },
-  tracks[]{ title, duration },
-  gallery[]{ alt, caption, asset->{_id, metadata{dimensions}} }
-}`;
-
 export const getSongs = cache(async () => {
-  return client.fetch(
-    `*[_type == "song"] | order(order asc) {
-      _id, title, album, order, "slug": slug.current
-    }`
-  );
+  return client.fetch(songsListQuery);
 });
 
 export const getReleases = cache(async () => {
   const [releases, songs] = await Promise.all([
-    client
-      .fetch(`*[_type == "musicRelease"] | order(order asc) ${RELEASE_FIELDS}`)
-      .catch(() => []),
+    client.fetch(musicReleasesQuery).catch(() => []),
     getSongs().catch(() => []),
   ]);
   return (releases || [])
@@ -155,12 +151,7 @@ export function featuredRelease(releases) {
 }
 
 export const getLuckyPaths = cache(async () => {
-  const data = await client.fetch(`{
-    "posts": *[_type == "blogPost" && defined(slug.current)].slug.current,
-    "songs": *[_type == "song" && defined(slug.current)].slug.current,
-    "images": *[_type == "imageGallery"][0].galleryImages[]._key,
-    "releases": *[_type == "musicRelease"]{ title, "slug": slug.current }
-  }`);
+  const data = await client.fetch(luckyPathsQuery);
   const paths = [
     ...(data?.posts || []).map((slug) => `/blog/${slug}`),
     ...(data?.songs || []).map((slug) => `/lyrics/${slug}`),
@@ -177,125 +168,60 @@ export const getLuckyPaths = cache(async () => {
 });
 
 export const getBlogList = cache(async () => {
-  return client.fetch(`*[_type == "blogPost"] | order(date desc) {
-    _id, title, date, slug,
-    "preview": pt::text(content),
-    "imageCount": count(content[_type == "image"])
-  }`);
+  return client.fetch(blogListQuery);
 });
 
 export const getBlogPost = cache(async (slug) => {
   if (!slug) return null;
-  return client.fetch(
-    `*[_type == "blogPost" && slug.current == $slug][0] {
-      _id, title, date, slug,
-      "preview": pt::text(content),
-      content[]{
-        ...,
-        _type == "image" => { ..., asset-> },
-        _type == "block" => {
-          ...,
-          markDefs[]{ ..., _type == "link" => { ... } }
-        }
-      }
-    }`,
-    { slug }
-  );
+  return client.fetch(blogPostBySlugQuery, { slug });
 });
 
 export const getLyricsList = cache(async () => {
-  return client.fetch(`*[_type == "song"] | order(albumOrder asc, album asc, order asc) {
-    _id, title, album, albumOrder, order, slug,
-    "preview": pt::text(lyrics),
-    "date": *[_type == "musicRelease" && lower(title) == lower(^.album)][0].date
-  }`);
+  return client.fetch(lyricsListQuery);
 });
 
 export const getLyric = cache(async (slug) => {
   if (!slug) return null;
-  return client.fetch(
-    `*[_type == "song" && slug.current == $slug][0] {
-      _id, title, album, slug,
-      "preview": pt::text(lyrics),
-      lyrics[]{
-        ...,
-        _type == "block" => {
-          ...,
-          markDefs[]{ ..., _type == "link" => { ... } }
-        }
-      }
-    }`,
-    { slug }
-  );
+  return client.fetch(lyricBySlugQuery, { slug });
 });
 
 export const getShopDestination = cache(async () => {
-  const data = await client.fetch(`*[_type == "shopLink"][0]{ url }`);
+  const data = await client.fetch(shopLinkQuery);
   return resolveShopDestination(data?.url);
 });
 
 export const getSocials = cache(async () => {
-  return client.fetch(`*[_type == "socialLink"] | order(order asc) {
-    _id, title, url, description
-  }`);
+  return client.fetch(socialLinksQuery);
 });
 
 export const getContactEmail = cache(async () => {
-  const email = await client.fetch(`*[_type == "contact" && defined(email)][0].email`);
+  const email = await client.fetch(contactEmailQuery);
   return String(email || "").trim();
 });
 
 /** Sanity asset reference for sitewide og:image (1200×630 crop applied in seo.js). */
 export const getSiteShareImageAsset = cache(async () => {
-  const data = await client.fetch(`{
-    "custom": *[_type == "contact"][0].ogImage.asset->{ _id, metadata { dimensions }, alt },
-    "cover": *[_type == "musicRelease" && featured == true][0].cover.asset->{ _id, metadata { dimensions }, alt },
-    "coverAny": *[_type == "musicRelease"] | order(order asc)[0].cover.asset->{ _id, metadata { dimensions }, alt },
-    "header": *[_type == "imageGallery"][0].galleryImages[0].asset->{ _id, metadata { dimensions }, alt }
-  }`);
+  const data = await client.fetch(siteShareImageQuery);
   return data?.custom || data?.cover || data?.coverAny || data?.header || null;
 });
 
 export const getBlogPostShareImageAsset = cache(async (slug) => {
   if (!slug) return null;
-  return client.fetch(
-    `*[_type == "blogPost" && slug.current == $slug][0].content[_type == "image"][0].asset->{
-      _id, metadata { dimensions }, alt
-    }`,
-    { slug }
-  );
+  return client.fetch(blogPostShareImageQuery, { slug });
 });
 
 export const getReleaseShareImageAsset = cache(async (slug) => {
   if (!slug) return null;
-  return client.fetch(
-    `*[_type == "musicRelease" && slug.current == $slug][0].cover.asset->{
-      _id, metadata { dimensions }, alt
-    }`,
-    { slug }
-  );
+  return client.fetch(releaseShareImageQuery, { slug });
 });
 
 export const getMapLocations = cache(async () => {
-  return client.fetch(`*[_type == "mapLocation"] {
-    _id, venueName, address, coordinates
-  }`);
+  return client.fetch(mapLocationsQuery);
 });
 
 export const getGallery = cache(async () => {
   const started = Date.now();
-  const data = await client.fetch(`*[_type == "imageGallery"][0] {
-    title,
-    galleryImages[] {
-      asset->{
-        _id,
-        metadata { dimensions }
-      },
-      alt,
-      caption,
-      "id": _key
-    }
-  }`);
+  const data = await client.fetch(imageGalleryQuery);
   const images = (data?.galleryImages || []).filter((img) => img && img.asset);
   const elapsed = Math.max((Date.now() - started) / 1000, 0.04).toFixed(2);
   return { images, elapsed };
@@ -303,29 +229,9 @@ export const getGallery = cache(async () => {
 
 export const getAllFeed = cache(async () => {
   const started = Date.now();
-  const query = `{
-    "releases": *[_type == "musicRelease"] | order(order asc)[0...1] {
-      _id, title, description, url, date, year, subtitle, "slug": slug.current
-    },
-    "posts": *[_type == "blogPost"] | order(date desc)[0...3] {
-      _id, title, date, slug, "preview": pt::text(content), "imageCount": count(content[_type == "image"])
-    },
-    "songs": *[_type == "song"] | order(albumOrder asc, order asc)[0...3] {
-      _id, title, album, slug, "preview": pt::text(lyrics),
-      "date": *[_type == "musicRelease" && lower(title) == lower(^.album)][0].date
-    },
-    "socials": *[_type == "socialLink"] | order(order asc)[0...3] {
-      _id, title, url, description
-    },
-    "images": *[_type == "imageGallery"][0].galleryImages[0...6] {
-      asset->{_id, metadata{dimensions}},
-      alt,
-      "id": _key
-    }
-  }`;
   const { readStoredVideos } = await import("../../lib/youtubeVideos.js");
   const [data, stored] = await Promise.all([
-    client.fetch(query),
+    client.fetch(allFeedQuery),
     readStoredVideos().catch(() => ({ videos: [] })),
   ]);
   const elapsed = Math.max((Date.now() - started) / 1000, 0.04).toFixed(2);
@@ -346,8 +252,8 @@ export const getAllFeed = cache(async () => {
 
 export const getSitemapEntries = cache(async () => {
   const [posts, songs, releases] = await Promise.all([
-    client.fetch(`*[_type == "blogPost" && defined(slug.current)]{ "slug": slug.current, date }`),
-    client.fetch(`*[_type == "song" && defined(slug.current)]{ "slug": slug.current }`),
+    client.fetch(sitemapBlogSlugsQuery),
+    client.fetch(sitemapSongSlugsQuery),
     getReleases().catch(() => []),
   ]);
   return { posts: posts || [], songs: songs || [], releases: releases || [] };
