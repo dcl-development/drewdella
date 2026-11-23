@@ -1,11 +1,12 @@
 import "server-only";
 import { createClient } from "@sanity/client";
+import { projectId, dataset, apiVersion } from "../../sanity/env";
 
 export const client = createClient({
-  projectId: "qcu6o4bq",
-  dataset: "production",
+  projectId,
+  dataset,
   useCdn: true,
-  apiVersion: "2024-01-01",
+  apiVersion,
 });
 
 export { urlFor, sanityImage } from "./imageUrl";

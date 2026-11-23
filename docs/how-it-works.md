@@ -13,7 +13,7 @@ The server uses `SANITY_API_TOKEN` in two places only:
 - posting chat messages and keeping the chat rate-limit counters (`lib/chat.js`)
 - saving the daily YouTube snapshot (`lib/youtubeVideos.js`, called from `/api/videos-sync`)
 
-The document types are in `studio/schemaTypes/`: `musicRelease`, `song`, `blogPost`, `imageGallery`, `socialLink`, `mapLocation`, `shopLink`, `contact`, `chatMessage` and `youtubeCache`. The only Studio is the embedded one at [drewdella.com/studio](https://drewdella.com/studio) (`/studio`). `app/robots.js` disallows `/studio` and `/api/`. The separately hosted Studio at drewdella.sanity.studio is retired. `studio/sanity.cli.ts` has no `deployment` block, and `studio/package.json` has no deploy script, so a hosted Studio is not redeployed from this repo. Links that come from the CMS go through `safeHref` (`src/lib/safeHref.js`) before being rendered, so only `http(s)` URLs and same-site paths get through.
+The document types are in `studio/schemaTypes/`: `musicRelease`, `song`, `blogPost`, `imageGallery`, `socialLink`, `mapLocation`, `shopLink`, `contact`, `chatMessage` and `youtubeCache`. The only Studio is the embedded one at [drewdella.com/studio](https://drewdella.com/studio) (`/studio`). `app/robots.js` disallows `/studio` and `/api/`. The separately hosted Studio at drewdella.sanity.studio is retired. Root `sanity.cli.ts` has no `deployment` block, so a hosted Studio is not redeployed from this repo. Links that come from the CMS go through `safeHref` (`src/lib/safeHref.js`) before being rendered, so only `http(s)` URLs and same-site paths get through.
 
 ## YouTube snapshot
 

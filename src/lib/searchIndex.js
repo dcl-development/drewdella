@@ -1,5 +1,6 @@
 import "server-only";
 import { client } from "./sanity";
+import { searchIndexQuery } from "./queries";
 import { toSearchDoc } from "./siteSearch";
 import { slugify } from "./slug";
 import { readStoredVideos } from "../../lib/youtubeVideos.js";
@@ -92,29 +93,8 @@ function slugOf(item) {
 }
 
 export async function buildSearchIndex() {
-  const query = `{
-    "releases": *[_type == "musicRelease"] {
-      _id, title, description, url, "slug": slug.current
-    },
-    "posts": *[_type == "blogPost"] {
-      _id, title, slug, "body": pt::text(content)
-    },
-    "songs": *[_type == "song"] {
-      _id, title, album, slug, "lyrics": pt::text(lyrics)
-    },
-    "socials": *[_type == "socialLink"] {
-      _id, title, url, description
-    },
-    "venues": *[_type == "mapLocation"] {
-      _id, venueName, address
-    },
-    "images": *[_type == "imageGallery"][0].galleryImages[] {
-      alt, caption, "id": _key
-    }
-  }`;
-
   const [data, stored] = await Promise.all([
-    client.fetch(query).catch(() => ({})),
+    client.fetch(searchIndexQuery).catch(() => ({})),
     readStoredVideos().catch(() => ({ videos: [] })),
   ]);
 
