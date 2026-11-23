@@ -1,3 +1,6 @@
+/**
+ * @typedef {import("../../sanity.types").MusicReleasesQueryResult} MusicReleasesQueryResult
+ */
 import { cache } from "react";
 import { client, sanityImage } from "./sanity";
 import { resolveShopDestination } from "./shopLink";
